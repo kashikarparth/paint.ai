@@ -1,0 +1,31 @@
+Architecture of the model :
+
+
+Generator :  4x4 Random Noise (Gaussian Noise)
+Layers: deconv1 (4x4x1024), deconv2 (8x8x1024), deconv3 (16x16x512), deconv4 (32x32x256), deconv5 (64x64x128), deconv6 (128x128x64), deconv7 (256x256x3)
+
+Discriminator : All stride 2 and 1 pixel padding
+Layers:  conv1 (32 4 × 4 filters), conv2 (64 4 × 4 filters, conv3 (128 4 × 4 filters, conv4 (256 4 × 4 filters, conv5 (512 4 × 4 filters, conv6 (512 4 × 4 filters). Each convolutional layer is followed by a leaky rectified activation (LeakyRelU) [13, 25] in all the layers of the discriminator. After passing a image to the common conv D body, it will produce a feature map or size (4 × 4 × 512). The real/fake Dr head collapses the (4 × 4 × 512) by a fully connected to produce Dr(c|x) (probability of image coming for the real image distribution). The multi-label probabilities Dc(ck|x) head is produced by passing the(4 × 4 × 512) into 3 fully collected layers sizes 1024, 512, K, respectively, where K is the number of style classes.
+
+Initialization and Training: The weights were initialized from a zero-centered Normal distribution with standard deviation 0.02. We used a mini-batch size of 128 and used mini-batch stochastic gradient descent (SGD) for training with 0.0001 as learning rate. In the LeakyReLU, the slope of the leak was set to 0.2 in all models. While previous GAN work has used momentum to accelerate training, we used the Adam optimizer and trained the model for 100 epochs (100 passes over the training data). To stabilize the training, we used Batch Normalization [11] that normalizing the input to each unit to have zero mean and unit variance. We performed data augmentation by adding 5 crops within for each image (bottom-left, bottom-right, mid, top-left, top-right) on our image dataset. The width and hight of each crop is 90% of the width and the hight of the original painting.
+
+
+Try the following :
+Train weighted log probability
+Train bias vector normal (batch-wise average)
+Train bias vector cumulative (build up a residue)
+Train wasserstein GAN - circle loss function
+
+
+Weighter log probability - loss function with a gamma 0.5
+bias vector normal - loss function for given batch = c1 - x, c2 - y, c3 - z ...., bias vector = x/x+y+z, y/x+y+z,.....
+cumulative vector - batch1, batch1 + batch2, batch1+batch2+batch3, ......
+
+------------------------------------------------ requirements ----------------------------------------------
+
+1) discriminator model - real/fake and class
+2) generator model 
+3) discriminator(generator) model
+4) training data management 
+5) training loop
+6) loss function for discriminator and generator with inout and target data arguments
