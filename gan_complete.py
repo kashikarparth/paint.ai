@@ -1,17 +1,13 @@
 import tensorflow as tf
-import batch_feeding as data
 import os
 import scipy.misc
 import numpy as np
-import tensorflow as tf
 
 import keras.backend as K
 
-import matplotlib.pyplot as plt
-
-from keras.layers.convolutional import Convolution2D, Deconvolution2D
+from keras.layers.convolutional import Convolution2D, Conv2DTranspose
 from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.core import Dense, Reshape, Flatten, Activation
+from keras.layers.core import Dense, Flatten
 from keras.layers import Input, UpSampling2D
 from keras.models import Model
 
@@ -20,17 +16,17 @@ tf.reset_default_graph()
 
 def make_generator(Xk_g):
     up = UpSampling2D(size=(4,4))(Xk_g)
-    x = Deconvolution2D(1024,4,4,output_shape = (None,1024,8,8), activation = None)(up)
+    x = Conv2DTranspose(filters = 1024,kernel_size = (4,4), strides = (2,2), padding = "same")(up)
     x = LeakyReLU(0.2)(x)
-    x = Deconvolution2D(512,4,4,output_shape = (None,512,16,16), activation = None)(up)
+    x = Conv2DTranspose(filters = 512,kernel_size = (4,4), strides = (2,2), padding = "same")(x)
     x = LeakyReLU(0.2)(x)
-    x = Deconvolution2D(256,4,4,output_shape = (None,256,32,32), activation = None)(up)
+    x = Conv2DTranspose(filters = 256,kernel_size = (4,4), strides = (2,2), padding = "same")(x)
     x = LeakyReLU(0.2)(x)
-    x = Deconvolution2D(128,4,4,output_shape = (None,128,64,64), activation = None)(up)
+    x = Conv2DTranspose(filters = 128,kernel_size = (4,4), strides = (2,2), padding = "same")(x)
     x = LeakyReLU(0.2)(x)
-    x = Deconvolution2D(64,4,4,output_shape = (None,64,128,128), activation = None)(up)
+    x = Conv2DTranspose(filters = 64,kernel_size = (4,4), strides = (2,2), padding = "same")(x)
     x = LeakyReLU(0.2)(x)
-    x = Deconvolution2D(3,4,4,output_shape = (None,3,256,256), activation = None)(up)
+    x = Conv2DTranspose(filters = 3,kernel_size = (4,4), strides = (2,2), padding = "same")(x)
     x = LeakyReLU(0.2)(x)
     g = x
     return g
@@ -111,9 +107,9 @@ class painter(object):
             Xk_d = Input(shape=[256,256,3])
             d,dc = make_discriminator(Xk_d)
         
-        g_net = Model(input=Xk_g, output=g)
-        d_net = Model(input=Xk_d, output=d)
-        dc_net = Model(input=Xk_d, output=dc)
+        g_net = Model(inputs=Xk_g, outputs=g)
+        d_net = Model(inputs=Xk_d, outputs=d)
+        dc_net = Model(inputs=Xk_d, outputs=dc)
         
         
         X_g = tf.placeholder(tf.float32,shape=[None,1,1,2048],name = 'X_g')
@@ -181,7 +177,7 @@ class painter(object):
                     images.append(image)
         
         images = np.asarray(images, dtype = np.float32)
-        print(np.shape(images))
+        
         D_c = np.zeros(shape = [next_batch_size,27])
         D_c[:,current_index] = 1
         G_c = 0.8*D_c
@@ -228,7 +224,7 @@ class painter(object):
                     print(i)
                 n_epochs -= 1
                 data_not_exhausted = self.pictures_done < 25
-            print("Epochs_remaining :" + n_epochs)
+            print("Epochs_remaining :" + str(n_epochs))
         
         print(loss_d,loss_g)
             
