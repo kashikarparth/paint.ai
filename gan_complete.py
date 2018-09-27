@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+import sys
 import scipy.misc
 import numpy as np
 
@@ -191,20 +192,17 @@ class painter(object):
         return {X_g : noise, X_d : images, X_dc : D_c, G_dc : G_c,  K.learning_phase() : train}
             
     def train_g(self, feed_dict):
-        _, loss_g = self.sess.run([self.train_op_g, self.loss_g], feed_dict=feed_dict)
-        return loss_g
+        self.sess.run([self.train_op_g], feed_dict=feed_dict)
+        return self.sess.run(self.loss_g, feed_dict = feed_dict)
 
     def train_d(self, feed_dict):
         self.sess.run(self.clip_updates, feed_dict=feed_dict)
         self.sess.run(self.train_op_d, feed_dict=feed_dict)
         self.sess.run(self.train_op_dc,feed_dict=feed_dict)
-        return self.sess.run(self.loss_d, feed_dict=feed_dict)
+        return self.sess.run(tf.add(self.loss_d,self.loss_dc), feed_dict=feed_dict)
 
     
-    def fit(self,n_epochs = 1, logdir='gan-run'):
-                
-        if tf.gfile.Exists(logdir): tf.gfile.DeleteRecursively(logdir)
-        tf.gfile.MakeDirs(logdir)
+    def fit(self,n_epochs = 1):
         
         init = tf.global_variables_initializer()
         self.sess.run(init)
@@ -213,20 +211,23 @@ class painter(object):
         loss_g = []
         
         while(n_epochs > 0):
+            batch = 0
             data_not_exhausted = True
             while(data_not_exhausted):
                 feed_dict = self.next_batch()
+                batch += 1
                 for i in range(10):
                     loss_d.append(self.train_d(feed_dict))
-                    print(i)
+                    print(batch, " for discriminator")
                 for i in range(5):
                     loss_g.append(self.train_g(feed_dict))
-                    print(i)
-                n_epochs -= 1
-                data_not_exhausted = self.pictures_done < 25
+                    print(batch , " for generator")
+                data_not_exhausted = self.pictures_done < 81444
+                if(data_not_exhausted == False):
+                    self.pictures_done = 0
+            n_epochs -= 1
             print("Epochs_remaining :" + str(n_epochs))
-        
-        print(loss_d,loss_g)
+        print(len(loss_d),len(loss_g))
             
                
 
