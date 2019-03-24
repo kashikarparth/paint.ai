@@ -188,12 +188,19 @@ with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
 
 
 def fit(n_epochs = 1):
-    tot_epochs = n_epochs
+    
     sess = tf.Session()
-    init = tf.global_variables_initializer()
-    sess.run(init)
+    saver = tf.train.Saver()
+    if(1):
+        init = tf.global_variables_initializer()
+        sess.run(init)
+    else:
+        saver.restore(sess, "/tmp/model.ckpt")
+               
+    tot_epochs = n_epochs    
     loss_d = []
     loss_g = []
+
     while(n_epochs > 0):
         data_not_exhausted = True
         pictures_done = 0
@@ -222,8 +229,10 @@ def fit(n_epochs = 1):
                 print("Pictures Done: " + str(pictures_done) + "/" + str(len_dataset) + " for epoch: " +str(6-n_epochs) +"/" +str(tot_epochs))
         n_epochs -= 1
         print("Epochs_done :" + str(n_epochs))
+        save_path = saver.save(sess, "/tmp/model.ckpt")
+        print("Model saved in path: %s" % save_path)
     print(len(loss_d),len(loss_g))
-
+    
 
 fit(5)
 
